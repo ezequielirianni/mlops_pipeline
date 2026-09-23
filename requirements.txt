@@ -1,15 +1,26 @@
-pandas
-numpy
-openpyxl
-python-dotenv
-db-dtypes
-jupyter
-notebook
-ipykernel
-seaborn
-ipywidgets
-scikit-learn
-xgboost
-pydantic
-fastapi
-uvicorn[standard]
+# Jupyter y notebooks
+db-dtypes==1.7.1
+jupyter==1.1.1
+notebook==7.6.2
+ipykernel==7.3.0
+ipywidgets==8.1.9
+
+# Procesamiento y análisis de datos
+numpy==2.5.3
+pandas==3.0.5
+matplotlib==3.11.1
+seaborn==0.13.2
+openpyxl==3.1.5
+
+# Machine Learning
+scikit-learn==1.9.0
+xgboost==3.4.1
+joblib==1.6.0
+
+# Configuración
+python-dotenv==1.2.3
+
+# API
+pydantic==2.13.5
+fastapi==0.141.1
+uvicorn[standard]==0.52.4
