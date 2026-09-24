@@ -86,6 +86,29 @@ ORDEN_TENDENCIA_INGRESOS = ["Decreciente", "Estable", "Creciente"]
 # Rango razonable de edad, según hallazgo del EDA (había registros de hasta 123 años)
 EDAD_MIN, EDAD_MAX = 18, 90
 
+# Rangos válidos por variable (mínimo, máximo; None = sin límite), ambos inclusive.
+# Un valor fuera de rango se considera IMPOSIBLE (error de carga o código
+# especial) y se convierte en nulo, para que lo complete el imputer del
+# pipeline. No se recorta: recortar inventaría un valor válido (por ejemplo,
+# un salario de 22 mil millones pasaría a "gana 40 millones").
+# Los límites son supuestos documentados, no confirmados por el negocio:
+#   - edad_cliente: [18, 90]. Había 150 registros con 122-123 años.
+#   - puntaje_datacredito: [1, 950]. La escala de DataCrédito llega a 950; el 0
+#     (145 registros) se interpreta como "sin puntaje" y hubo un -7 y un 999.
+#   - salario_cliente: [100.000, 100.000.000] mensuales. Había 24 salarios en 0,
+#     otros por debajo de 100 mil y valores de hasta 22 mil millones.
+#   - total_otros_prestamos: hasta 1.000 millones (13 registros de hasta 6.787 M).
+#   - promedio_ingresos_datacredito: mayor a 0 (7 registros en 0 = sin dato).
+# Los valores extremos pero posibles (por ejemplo, un salario de 60 millones)
+# no se tocan acá: los acota después cap_outliers_sin_leakage.
+RANGOS_VALIDOS = {
+    "edad_cliente": (EDAD_MIN, EDAD_MAX),
+    "puntaje_datacredito": (1, 950),
+    "salario_cliente": (100_000, 100_000_000),
+    "total_otros_prestamos": (None, 1_000_000_000),
+    "promedio_ingresos_datacredito": (1, None),
+}
+
 
 # ---------------------------------------------------------------------------
 # Carga y limpieza
@@ -107,10 +130,30 @@ def load_raw_data() -> pd.DataFrame:
     return df
 
 
+def validar_rangos(df: pd.DataFrame) -> pd.DataFrame:
+    """Convierte en nulo todo valor fuera de RANGOS_VALIDOS. Son reglas de
+    dominio con límites fijos (no se calculan con los datos), así que se pueden
+    aplicar a todo el dataset antes del split sin generar data leakage."""
+    df = df.copy()
+    for col, (minimo, maximo) in RANGOS_VALIDOS.items():
+        fuera = pd.Series(False, index=df.index)
+        if minimo is not None:
+            fuera |= df[col] < minimo
+        if maximo is not None:
+            fuera |= df[col] > maximo
+        if fuera.any():
+            logger.warning(
+                f"{int(fuera.sum())} valores de '{col}' fuera del rango válido "
+                f"[{minimo}, {maximo}], se convierten en nulos."
+            )
+            df[col] = df[col].mask(fuera)
+    return df
+
+
 def clean_data(df: pd.DataFrame) -> pd.DataFrame:
     """Aplica la limpieza definida en comprension_eda.ipynb: corrección de
-    'tendencia_ingresos', tipado uniforme y acotamiento de 'edad_cliente'."""
-    df = df.copy()
+    'tendencia_ingresos', valores imposibles a nulo (validar_rangos) y tipado."""
+    df = validar_rangos(df)
 
     # tendencia_ingresos: se conservan solo las 3 categorías válidas; los valores
     # numéricos corruptos (y los nulos originales) quedan como NaN para que los
@@ -123,22 +166,6 @@ def clean_data(df: pd.DataFrame) -> pd.DataFrame:
     df["tendencia_ingresos_limpia"] = df["tendencia_ingresos"].where(
         df["tendencia_ingresos"].isin(CATEGORIAS_VALIDAS_TENDENCIA), np.nan
     )
-
-    # Acotamiento de edad_cliente (hallazgo de EDA: registros hasta 123 años)
-    n_anomalos = (~df["edad_cliente"].between(EDAD_MIN, EDAD_MAX)).sum()
-    if n_anomalos:
-        logger.warning(
-            f"{n_anomalos} registros con edad_cliente fuera de [{EDAD_MIN}, {EDAD_MAX}], "
-            f"se acotan (clip) a ese rango."
-        )
-    df["edad_cliente"] = df["edad_cliente"].clip(lower=EDAD_MIN, upper=EDAD_MAX)
-
-    # puntaje_datacredito: un score no puede ser negativo (hallazgo al revisar rangos
-    # durante feature engineering: 1 registro con valor -7). Se acota en 0.
-    n_score_negativo = (df["puntaje_datacredito"] < 0).sum()
-    if n_score_negativo:
-        logger.warning(f"{n_score_negativo} registros con puntaje_datacredito negativo, se acotan a 0.")
-    df["puntaje_datacredito"] = df["puntaje_datacredito"].clip(lower=0)
 
     # Tipo nominal
     df["tipo_credito"] = df["tipo_credito"].astype("category")
@@ -281,8 +308,8 @@ def get_train_test_data(test_size: float = 0.2, random_state: int = 42):
         df, test_size=test_size, random_state=random_state, stratify=df[TARGET_COLUMN]
     )
 
-    # salario_cliente: outliers extremos (hasta 22 mil millones) detectados al revisar
-    # rangos en feature engineering, claramente errores de carga, no sesgo natural.
+    # salario_cliente: los valores imposibles (0, miles de millones) ya son nulos por
+    # validar_rangos; acá se acotan los extremos pero posibles (percentil 99 de train).
     df_train, df_test = cap_outliers_sin_leakage(df_train, df_test, "salario_cliente", upper_quantile=0.99)
 
     # Las derivadas se calculan DESPUÉS de acotar salario_cliente, para que

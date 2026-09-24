@@ -1,0 +1,255 @@
+{
+  "batch_id": 5,
+  "semilla": 47,
+  "fecha_monitoreo": "2026-09-24T20:11:02",
+  "n_referencia": 8610,
+  "n_batch": 1000,
+  "umbrales": {
+    "psi": 0.25,
+    "ks": 0.25,
+    "js": 0.3,
+    "chi2_pvalue": 0.05
+  },
+  "umbrales_alerta": {
+    "psi": 0.1,
+    "js": 0.15
+  },
+  "metrica_principal": {
+    "numerica": "psi",
+    "categorica": "js"
+  },
+  "estado_global": "drift",
+  "resumen": {
+    "estable": 11,
+    "alerta": 2,
+    "drift": 3
+  },
+  "tasa_no_pago_predicha": 0.325,
+  "drift_prediccion": {
+    "tipo": "prediccion",
+    "psi": 0.0953392408508354,
+    "js": 0.13073020116023037,
+    "ks": 0.1410766550522648,
+    "metrica_principal": "psi",
+    "valor_principal": 0.0953392408508354,
+    "estado": "estable",
+    "prob_media_referencia": 0.37652620274349013,
+    "prob_media_actual": 0.42331232816846853
+  },
+  "drift_por_variable": {
+    "edad_cliente": {
+      "tipo": "numerica",
+      "psi": 0.011019866690612076,
+      "js": 0.0445488474283955,
+      "ks": 0.032900912474728906,
+      "ks_pvalue": 0.28705647248473337,
+      "chi2_pvalue": null,
+      "metrica_principal": "psi",
+      "valor_principal": 0.011019866690612076,
+      "estado": "estable",
+      "confirmado_por_test": false
+    },
+    "capital_prestado": {
+      "tipo": "numerica",
+      "psi": 0.01726406627109264,
+      "js": 0.05574292006069484,
+      "ks": 0.039684088269454125,
+      "ks_pvalue": 0.11554352800932109,
+      "chi2_pvalue": null,
+      "metrica_principal": "psi",
+      "valor_principal": 0.01726406627109264,
+      "estado": "estable",
+      "confirmado_por_test": false
+    },
+    "plazo_meses": {
+      "tipo": "numerica",
+      "psi": 0.06727720437062923,
+      "js": 0.10903379003175706,
+      "ks": 0.06671544715447154,
+      "ks_pvalue": 0.0006514594074145026,
+      "chi2_pvalue": null,
+      "metrica_principal": "psi",
+      "valor_principal": 0.06727720437062923,
+      "estado": "estable",
+      "confirmado_por_test": false
+    },
+    "puntaje_datacredito": {
+      "tipo": "numerica",
+      "psi": 0.38646742347221835,
+      "js": 0.2589141476060883,
+      "ks": 0.25154092064258693,
+      "ks_pvalue": 1.3711548328399404e-49,
+      "chi2_pvalue": null,
+      "metrica_principal": "psi",
+      "valor_principal": 0.38646742347221835,
+      "estado": "drift",
+      "confirmado_por_test": true
+    },
+    "huella_consulta": {
+      "tipo": "numerica",
+      "psi": 0.009960610507611649,
+      "js": 0.04236273996824466,
+      "ks": 0.027535423925667827,
+      "ks_pvalue": 0.49583910900291256,
+      "chi2_pvalue": null,
+      "metrica_principal": "psi",
+      "valor_principal": 0.009960610507611649,
+      "estado": "estable",
+      "confirmado_por_test": false
+    },
+    "salario_cliente": {
+      "tipo": "numerica",
+      "psi": 0.5282486660440973,
+      "js": 0.27241541662546015,
+      "ks": 0.25552647104025067,
+      "ks_pvalue": 1.1505383165136321e-51,
+      "chi2_pvalue": null,
+      "metrica_principal": "psi",
+      "valor_principal": 0.5282486660440973,
+      "estado": "drift",
+      "confirmado_por_test": true
+    },
+    "total_otros_prestamos": {
+      "tipo": "numerica",
+      "psi": 0.11542404612752365,
+      "js": 0.14250796940093496,
+      "ks": 0.06877490352313007,
+      "ks_pvalue": 0.00039764587880769883,
+      "chi2_pvalue": null,
+      "metrica_principal": "psi",
+      "valor_principal": 0.11542404612752365,
+      "estado": "alerta",
+      "confirmado_por_test": false
+    },
+    "cuota_pactada": {
+      "tipo": "numerica",
+      "psi": 0.014692771777064292,
+      "js": 0.051418389546436655,
+      "ks": 0.033534262485482,
+      "ks_pvalue": 0.2596191196387258,
+      "chi2_pvalue": null,
+      "metrica_principal": "psi",
+      "valor_principal": 0.014692771777064292,
+      "estado": "estable",
+      "confirmado_por_test": false
+    },
+    "cant_creditosvigentes": {
+      "tipo": "numerica",
+      "psi": 0.007656813439688326,
+      "js": 0.037149917124753296,
+      "ks": 0.03218815331010453,
+      "ks_pvalue": 0.30411390628816487,
+      "chi2_pvalue": null,
+      "metrica_principal": "psi",
+      "valor_principal": 0.007656813439688326,
+      "estado": "estable",
+      "confirmado_por_test": false
+    },
+    "saldo_mora": {
+      "tipo": "numerica",
+      "psi": 0.0,
+      "js": 0.0,
+      "ks": 0.004125412541254125,
+      "ks_pvalue": 1.0,
+      "chi2_pvalue": null,
+      "metrica_principal": "psi",
+      "valor_principal": 0.0,
+      "estado": "estable",
+      "confirmado_por_test": false
+    },
+    "saldo_principal": {
+      "tipo": "numerica",
+      "psi": 0.09052538878922885,
+      "js": 0.12545882517727247,
+      "ks": 0.06961498462572234,
+      "ks_pvalue": 0.00043786721855177687,
+      "chi2_pvalue": null,
+      "metrica_principal": "psi",
+      "valor_principal": 0.09052538878922885,
+      "estado": "estable",
+      "confirmado_por_test": false
+    },
+    "promedio_ingresos_datacredito": {
+      "tipo": "numerica",
+      "psi": 0.22556001036525591,
+      "js": 0.19700476282880214,
+      "ks": 0.14494724058400227,
+      "ks_pvalue": 2.4325502267394424e-12,
+      "chi2_pvalue": null,
+      "metrica_principal": "psi",
+      "valor_principal": 0.22556001036525591,
+      "estado": "alerta",
+      "confirmado_por_test": false
+    },
+    "ratio_cuota_salario": {
+      "tipo": "numerica",
+      "psi": 0.006345767784024942,
+      "js": 0.03381905790114403,
+      "ks": 0.019138059614285503,
+      "ks_pvalue": 0.8931804980933539,
+      "chi2_pvalue": null,
+      "metrica_principal": "psi",
+      "valor_principal": 0.006345767784024942,
+      "estado": "estable",
+      "confirmado_por_test": false
+    },
+    "tipo_laboral": {
+      "tipo": "categorica",
+      "psi": 0.037867397708339905,
+      "js": 0.08256538479348412,
+      "ks": null,
+      "ks_pvalue": null,
+      "chi2_pvalue": 4.38016526359429e-09,
+      "metrica_principal": "js",
+      "valor_principal": 0.08256538479348412,
+      "estado": "estable",
+      "confirmado_por_test": true
+    },
+    "tipo_credito": {
+      "tipo": "categorica",
+      "psi": 1.5518303448756714,
+      "js": 0.3952537532298193,
+      "ks": null,
+      "ks_pvalue": null,
+      "chi2_pvalue": 0.0,
+      "metrica_principal": "js",
+      "valor_principal": 0.3952537532298193,
+      "estado": "drift",
+      "confirmado_por_test": true
+    },
+    "tendencia_ingresos_limpia": {
+      "tipo": "categorica",
+      "psi": 0.10332809153401307,
+      "js": 0.13599093270367166,
+      "ks": null,
+      "ks_pvalue": null,
+      "chi2_pvalue": 4.783492472641552e-22,
+      "metrica_principal": "js",
+      "valor_principal": 0.13599093270367166,
+      "estado": "estable",
+      "confirmado_por_test": true
+    }
+  },
+  "recomendaciones": [
+    {
+      "nivel": "critico",
+      "mensaje": "Se recomienda REENTRENAR el modelo: 3 variables en drift. La población actual difiere de la de entrenamiento y el desempeño reportado puede no sostenerse."
+    },
+    {
+      "nivel": "critico",
+      "mensaje": "Revisar la variable 'puntaje_datacredito': PSI=0.386 supera el umbral crítico (0.25). Proviene de DataCrédito: verificar la integración con esa fuente."
+    },
+    {
+      "nivel": "critico",
+      "mensaje": "Revisar la variable 'salario_cliente': PSI=0.528 supera el umbral crítico (0.25). Confirmar si es un cambio real de la población o un problema de carga."
+    },
+    {
+      "nivel": "critico",
+      "mensaje": "Revisar la variable 'tipo_credito': JS=0.395 supera el umbral crítico (0.3). Confirmar si es un cambio real de la población o un problema de carga."
+    },
+    {
+      "nivel": "alerta",
+      "mensaje": "Cambio moderado en total_otros_prestamos, promedio_ingresos_datacredito: monitorear en los próximos batches."
+    }
+  ]
+}
