@@ -20,14 +20,17 @@ mlops_pipeline/
 │   ├── model_training_evaluation.py   # Entrenamiento, evaluación y selección del modelo
 │   ├── model_monitoring.py            # Monitoreo y detección de data drift
 │   ├── app_monitoreo.py               # Tablero de monitoreo en Streamlit
-│   └── model_deploy.py                # Despliegue del modelo (próximos avances)
+│   └── model_deploy.py                # API de predicción (FastAPI)
 ├── Base_de_datos.xlsx                 # Dataset no productivo de ejemplo
 ├── mejor_modelo.pkl                   # Mejor modelo entrenado (generado por model_training_evaluation.py)
 ├── drift_report.json                  # Reporte del último batch de monitoreo (generado)
 ├── drift_history.csv                  # Historial de drift por batch (generado)
 ├── ultimo_batch_predicciones.csv      # Datos + pronósticos del último batch (generado)
-├── requirements.txt                   # Dependencias del proyecto
+├── requirements.txt                   # Dependencias del proyecto (desarrollo completo)
+├── requirements-api.txt               # Dependencias mínimas de la API (imagen Docker)
 ├── set_up.bat                         # Script de setup del entorno virtual (Windows)
+├── Dockerfile                         # Imagen de la API
+├── .dockerignore
 ├── .gitignore
 └── README.md
 ```
@@ -82,6 +85,7 @@ Para un chequeo rápido solo del feature engineering: `python ft_engineering.py`
 - [x] V1.0.1 — Carga de datos y EDA completo (corrección post-review)
 - [x] V1.1.0 — Feature engineering, entrenamiento y evaluación de modelos
 - [x] V1.2.0 — Monitoreo de data drift y tablero en Streamlit
+- [x] V1.3.0 — API de predicción (FastAPI) e imagen Docker
 
 ## Hallazgos clave del EDA (V1.0.1)
 
@@ -182,8 +186,65 @@ Desde la barra lateral se puede ejecutar un batch nuevo.
 streamlit run src/app_monitoreo.py
 ```
 
+## API de predicción (V1.3.0) — `model_deploy.py`
+
+API en FastAPI que carga `mejor_modelo.pkl` y permite **predicción por lotes**. Recibe los datos **crudos** de los clientes, los valida y aplica las mismas transformaciones que `ft_engineering.py`: limpieza de `tendencia_ingresos`, caps del percentil 99 de train y cálculo de `ratio_cuota_salario`. Los caps se recalculan al iniciar con el mismo split del entrenamiento, así coinciden con los del modelo. El imputado, el escalado y el encoding los hace el pipeline guardado en el `.pkl`.
+
+| Endpoint | Método | Descripción |
+|---|---|---|
+| `/` | GET | Información del servicio |
+| `/health` | GET | Estado, modelo cargado, columnas de entrada y umbrales |
+| `/predict` | POST | Lote de clientes en JSON: `{"clientes": [{...}, {...}]}` |
+| `/predict/csv` | POST | Archivo CSV con una fila por cliente |
+
+La respuesta incluye, por cliente, la probabilidad de no pago, la predicción (0 = no paga a tiempo, 1 = paga a tiempo) y su etiqueta. Se verificó que la API devuelve las mismas predicciones que el modelo sobre los 2106 registros válidos del set de test; los otros 47 tienen algún valor fuera de rango y la API los rechaza.
+
+**Validación de entrada (Pydantic).** Antes de predecir, cada cliente se valida con los mismos rangos de `RANGOS_VALIDOS` que usa el entrenamiento (un único lugar los define). Si hay un valor fuera de rango, falta un campo obligatorio, un campo numérico trae texto o una categoría no es válida, la API **no predice** y responde `422` con un mensaje claro por cliente y campo. Por ejemplo:
+
+```json
+{
+  "detail": "No se puede predecir: hay datos inválidos o fuera de rango. Corregir los campos indicados y volver a enviar la solicitud.",
+  "errores": [
+    {"cliente": 1, "campo": "edad_cliente", "valor": 123,
+     "mensaje": "'edad_cliente' está fuera del rango válido [18, 90]; el modelo no puede predecir con ese valor."}
+  ]
+}
+```
+
+La misma validación se aplica fila por fila al CSV. Los campos opcionales pueden llegar vacíos (`null` o celda vacía): el pipeline del modelo los imputa.
+
+Ejecución local (con el entorno activado):
+
+```
+cd src
+uvicorn model_deploy:app --reload
+```
+
+Documentación interactiva para probar los endpoints: http://localhost:8000/docs
+
+## Imagen Docker (V1.3.0)
+
+El `Dockerfile` sigue estos pasos, en este orden:
+
+1. **Imagen base liviana:** `python:3.12-slim`. Se usa 3.12 porque las versiones fijadas de numpy (2.5.3) requieren Python 3.12 o superior, y la API debe cargar el modelo con las mismas versiones con las que se entrenó.
+2. **Carpeta de la aplicación:** `WORKDIR /app`.
+3. **Dependencias antes que el código:** se copia primero `requirements-api.txt` (dentro del contenedor queda con el nombre `requirements.txt`), así Docker reutiliza la capa de instalación cuando solo cambia el código.
+4. **Instalación sin caché de pip:** `pip install --no-cache-dir`.
+5. **Solo los archivos que necesita la API:** `model_deploy.py`, `ft_engineering.py` (que importa), `mejor_modelo.pkl` y `Base_de_datos.xlsx` (para recalcular los caps del entrenamiento).
+6. **Puerto:** Uvicorn escucha en el 8000.
+7. **Proceso principal:** `uvicorn model_deploy:app --host 0.0.0.0 --port 8000`.
+
+Para que la imagen sea liviana, se instala `requirements-api.txt` (con las mismas versiones que `requirements.txt`, pero sin Jupyter, Streamlit, librerías de gráficos ni xgboost, que el modelo seleccionado no usa), y el `.dockerignore` deja afuera notebooks, scripts de entrenamiento y monitoreo y archivos generados.
+
+```
+docker build -t creditos-api .
+docker run --rm -p 8000:8000 creditos-api
+```
+
+Luego la API queda disponible en http://localhost:8000/docs.
+
 ## Próximos pasos
 
-- Disponibilizar el modelo mediante una API (FastAPI) y empaquetarlo en una imagen Docker.
+- Incorporar la limpieza y los caps al `Pipeline` del modelo, para que el `.pkl` sea autocontenido: la API no tendría que replicar esas transformaciones ni incluir el dataset en la imagen.
 - Agregar indicadores de faltante al imputer: los registros con valores imposibles tienen una tasa de no pago algo mayor (por ejemplo, 7.3% en edades inválidas y 6.9% en puntaje 0 frente al 4.7% general), información que hoy se pierde al imputar.
-- CI/CD: automatizar con GitHub Actions el entrenamiento y el monitoreo en cada Pull Request a `main`.
+- CI/CD: automatizar con GitHub Actions el entrenamiento, el monitoreo y el build de la imagen en cada Pull Request a `main`.
