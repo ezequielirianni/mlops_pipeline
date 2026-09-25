@@ -1,0 +1,22 @@
+# Dependencias mínimas de la API (imagen Docker liviana).
+# Mismas versiones que requirements.txt, para cargar el modelo con las mismas
+# librerías con las que se entrenó. No incluye Jupyter, Streamlit ni librerías
+# de gráficos, que la API no usa.
+# xgboost tampoco se incluye: el modelo seleccionado es un Gradient Boosting de
+# scikit-learn. Si un reentrenamiento eligiera XGBoost, habría que agregar
+# xgboost==3.4.1 acá.
+
+# Datos
+numpy==2.5.3
+pandas==3.0.5
+openpyxl==3.1.5
+
+# Modelo
+scikit-learn==1.9.0
+joblib==1.6.0
+
+# API
+pydantic==2.13.5
+fastapi==0.141.1
+uvicorn[standard]==0.52.4
+python-multipart==0.0.32

@@ -1,0 +1,21 @@
+# Entornos virtuales y cachés
+*-venv/
+venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# Control de versiones y configuración local
+.git
+.gitignore
+.env
+
+# Archivos que la API no usa
+src/*.ipynb
+src/app_monitoreo.py
+src/model_monitoring.py
+src/model_training_evaluation.py
+drift_report.json
+drift_history.csv
+ultimo_batch_predicciones.csv
+README.md
